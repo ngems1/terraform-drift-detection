@@ -1,0 +1,1964 @@
+{
+  "applyable": true,
+  "checks": [
+    {
+      "address": {
+        "kind": "var",
+        "name": "environment",
+        "to_display": "var.environment"
+      },
+      "instances": [
+        {
+          "address": {
+            "to_display": "var.environment"
+          },
+          "status": "pass"
+        }
+      ],
+      "status": "pass"
+    }
+  ],
+  "complete": true,
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "expressions": {
+          "access_key": {
+            "references": [
+              "local.local_mode"
+            ]
+          },
+          "default_tags": [
+            {
+              "tags": {
+                "references": [
+                  "var.project",
+                  "var.environment"
+                ]
+              }
+            }
+          ],
+          "endpoints": [
+            {
+              "s3": {
+                "references": [
+                  "var.aws_endpoint"
+                ]
+              },
+              "sqs": {
+                "references": [
+                  "var.aws_endpoint"
+                ]
+              },
+              "sts": {
+                "references": [
+                  "var.aws_endpoint"
+                ]
+              }
+            }
+          ],
+          "region": {
+            "references": [
+              "var.region"
+            ]
+          },
+          "s3_use_path_style": {
+            "references": [
+              "local.local_mode"
+            ]
+          },
+          "secret_key": {
+            "references": [
+              "local.local_mode"
+            ]
+          },
+          "skip_credentials_validation": {
+            "references": [
+              "local.local_mode"
+            ]
+          },
+          "skip_metadata_api_check": {
+            "references": [
+              "local.local_mode"
+            ]
+          },
+          "skip_requesting_account_id": {
+            "references": [
+              "local.local_mode"
+            ]
+          }
+        },
+        "full_name": "registry.terraform.io/hashicorp/aws",
+        "name": "aws",
+        "version_constraint": "~> 6.73"
+      }
+    },
+    "root_module": {
+      "outputs": {
+        "bucket": {
+          "description": "Uploads bucket name",
+          "expression": {
+            "references": [
+              "aws_s3_bucket.uploads.id",
+              "aws_s3_bucket.uploads"
+            ]
+          }
+        },
+        "queue_url": {
+          "description": "Jobs queue URL",
+          "expression": {
+            "references": [
+              "aws_sqs_queue.jobs.url",
+              "aws_sqs_queue.jobs"
+            ]
+          }
+        }
+      },
+      "resources": [
+        {
+          "address": "aws_s3_bucket.uploads",
+          "expressions": {
+            "bucket": {
+              "references": [
+                "local.name"
+              ]
+            }
+          },
+          "mode": "managed",
+          "name": "uploads",
+          "provider_config_key": "aws",
+          "schema_version": 0,
+          "type": "aws_s3_bucket"
+        },
+        {
+          "address": "aws_s3_bucket_public_access_block.uploads",
+          "expressions": {
+            "block_public_acls": {
+              "constant_value": true
+            },
+            "block_public_policy": {
+              "constant_value": true
+            },
+            "bucket": {
+              "references": [
+                "aws_s3_bucket.uploads.id",
+                "aws_s3_bucket.uploads"
+              ]
+            },
+            "ignore_public_acls": {
+              "constant_value": true
+            },
+            "restrict_public_buckets": {
+              "constant_value": true
+            }
+          },
+          "mode": "managed",
+          "name": "uploads",
+          "provider_config_key": "aws",
+          "schema_version": 0,
+          "type": "aws_s3_bucket_public_access_block"
+        },
+        {
+          "address": "aws_s3_bucket_server_side_encryption_configuration.uploads",
+          "expressions": {
+            "bucket": {
+              "references": [
+                "aws_s3_bucket.uploads.id",
+                "aws_s3_bucket.uploads"
+              ]
+            },
+            "rule": [
+              {
+                "apply_server_side_encryption_by_default": [
+                  {
+                    "sse_algorithm": {
+                      "constant_value": "AES256"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "mode": "managed",
+          "name": "uploads",
+          "provider_config_key": "aws",
+          "schema_version": 0,
+          "type": "aws_s3_bucket_server_side_encryption_configuration"
+        },
+        {
+          "address": "aws_s3_bucket_versioning.uploads",
+          "expressions": {
+            "bucket": {
+              "references": [
+                "aws_s3_bucket.uploads.id",
+                "aws_s3_bucket.uploads"
+              ]
+            },
+            "versioning_configuration": [
+              {
+                "status": {
+                  "constant_value": "Enabled"
+                }
+              }
+            ]
+          },
+          "mode": "managed",
+          "name": "uploads",
+          "provider_config_key": "aws",
+          "schema_version": 0,
+          "type": "aws_s3_bucket_versioning"
+        },
+        {
+          "address": "aws_sqs_queue.jobs",
+          "expressions": {
+            "name": {
+              "references": [
+                "local.name"
+              ]
+            },
+            "redrive_policy": {
+              "references": [
+                "aws_sqs_queue.jobs_dlq.arn",
+                "aws_sqs_queue.jobs_dlq"
+              ]
+            },
+            "sqs_managed_sse_enabled": {
+              "constant_value": true
+            },
+            "visibility_timeout_seconds": {
+              "references": [
+                "var.job_timeout_seconds"
+              ]
+            }
+          },
+          "mode": "managed",
+          "name": "jobs",
+          "provider_config_key": "aws",
+          "schema_version": 0,
+          "type": "aws_sqs_queue"
+        },
+        {
+          "address": "aws_sqs_queue.jobs_dlq",
+          "expressions": {
+            "message_retention_seconds": {
+              "constant_value": 1209600
+            },
+            "name": {
+              "references": [
+                "local.name"
+              ]
+            },
+            "sqs_managed_sse_enabled": {
+              "constant_value": true
+            }
+          },
+          "mode": "managed",
+          "name": "jobs_dlq",
+          "provider_config_key": "aws",
+          "schema_version": 0,
+          "type": "aws_sqs_queue"
+        }
+      ],
+      "variables": {
+        "aws_endpoint": {
+          "default": null,
+          "description": "LOCAL TESTING ONLY: an AWS emulator URL (e.g. http://localhost:5000). Leave null for real AWS."
+        },
+        "environment": {
+          "description": "Environment name (dev, staging, prod)"
+        },
+        "job_timeout_seconds": {
+          "default": 60,
+          "description": "SQS visibility timeout: how long a worker has to finish a job"
+        },
+        "project": {
+          "default": "code-clinic",
+          "description": "Project name, used in resource names and tags"
+        },
+        "region": {
+          "default": "eu-west-1",
+          "description": "AWS region"
+        }
+      }
+    }
+  },
+  "errored": false,
+  "format_version": "1.2",
+  "output_changes": {
+    "bucket": {
+      "actions": [
+        "no-op"
+      ],
+      "after": "code-clinic-dev-uploads",
+      "after_sensitive": false,
+      "after_unknown": false,
+      "before": "code-clinic-dev-uploads",
+      "before_sensitive": false
+    },
+    "queue_url": {
+      "actions": [
+        "no-op"
+      ],
+      "after": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+      "after_sensitive": false,
+      "after_unknown": false,
+      "before": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+      "before_sensitive": false
+    }
+  },
+  "planned_values": {
+    "outputs": {
+      "bucket": {
+        "sensitive": false,
+        "type": "string",
+        "value": "code-clinic-dev-uploads"
+      },
+      "queue_url": {
+        "sensitive": false,
+        "type": "string",
+        "value": "http://moto:5000/123456789012/code-clinic-dev-jobs"
+      }
+    },
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_s3_bucket.uploads",
+          "identity": {
+            "account_id": "",
+            "bucket": "code-clinic-dev-uploads",
+            "region": "eu-west-1"
+          },
+          "identity_schema_version": 0,
+          "mode": "managed",
+          "name": "uploads",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "sensitive_values": {
+            "cors_rule": [],
+            "grant": [
+              {
+                "permissions": [
+                  false
+                ]
+              }
+            ],
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "replication_configuration": [],
+            "server_side_encryption_configuration": [
+              {
+                "rule": [
+                  {
+                    "apply_server_side_encryption_by_default": [
+                      {}
+                    ]
+                  }
+                ]
+              }
+            ],
+            "tags": {},
+            "tags_all": {},
+            "versioning": [
+              {}
+            ],
+            "website": []
+          },
+          "type": "aws_s3_bucket",
+          "values": {
+            "acceleration_status": "",
+            "acl": null,
+            "arn": "arn:aws:s3:::code-clinic-dev-uploads",
+            "bucket": "code-clinic-dev-uploads",
+            "bucket_domain_name": "code-clinic-dev-uploads.s3.amazonaws.com",
+            "bucket_namespace": "global",
+            "bucket_prefix": "",
+            "bucket_region": "eu-west-1",
+            "bucket_regional_domain_name": "code-clinic-dev-uploads.s3.eu-west-1.amazonaws.com",
+            "cors_rule": [],
+            "force_destroy": false,
+            "grant": [
+              {
+                "id": "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a",
+                "permissions": [
+                  "FULL_CONTROL"
+                ],
+                "type": "CanonicalUser",
+                "uri": ""
+              }
+            ],
+            "hosted_zone_id": "Z1BKCTXD74EZPE",
+            "id": "code-clinic-dev-uploads",
+            "lifecycle_rule": [],
+            "logging": [],
+            "object_lock_configuration": [],
+            "object_lock_enabled": false,
+            "policy": "",
+            "region": "eu-west-1",
+            "replication_configuration": [],
+            "request_payer": "",
+            "server_side_encryption_configuration": [
+              {
+                "rule": [
+                  {
+                    "apply_server_side_encryption_by_default": [
+                      {
+                        "kms_master_key_id": "",
+                        "sse_algorithm": "AES256"
+                      }
+                    ],
+                    "bucket_key_enabled": false
+                  }
+                ]
+              }
+            ],
+            "tags": {},
+            "tags_all": {
+              "environment": "dev",
+              "managed-by": "terraform",
+              "project": "code-clinic",
+              "stack": "app-storage"
+            },
+            "timeouts": null,
+            "versioning": [
+              {
+                "enabled": false,
+                "mfa_delete": false
+              }
+            ],
+            "website": [],
+            "website_domain": null,
+            "website_endpoint": null
+          }
+        },
+        {
+          "address": "aws_s3_bucket_public_access_block.uploads",
+          "identity": {
+            "account_id": "",
+            "bucket": "code-clinic-dev-uploads",
+            "region": "eu-west-1"
+          },
+          "identity_schema_version": 0,
+          "mode": "managed",
+          "name": "uploads",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "sensitive_values": {},
+          "type": "aws_s3_bucket_public_access_block",
+          "values": {
+            "block_public_acls": true,
+            "block_public_policy": true,
+            "bucket": "code-clinic-dev-uploads",
+            "id": "code-clinic-dev-uploads",
+            "ignore_public_acls": true,
+            "region": "eu-west-1",
+            "restrict_public_buckets": true,
+            "skip_destroy": null
+          }
+        },
+        {
+          "address": "aws_s3_bucket_server_side_encryption_configuration.uploads",
+          "identity": {
+            "account_id": "",
+            "bucket": "code-clinic-dev-uploads",
+            "region": "eu-west-1"
+          },
+          "identity_schema_version": 1,
+          "mode": "managed",
+          "name": "uploads",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "sensitive_values": {
+            "rule": [
+              {
+                "apply_server_side_encryption_by_default": [
+                  {}
+                ],
+                "blocked_encryption_types": []
+              }
+            ]
+          },
+          "type": "aws_s3_bucket_server_side_encryption_configuration",
+          "values": {
+            "bucket": "code-clinic-dev-uploads",
+            "expected_bucket_owner": "",
+            "id": "code-clinic-dev-uploads",
+            "region": "eu-west-1",
+            "rule": [
+              {
+                "apply_server_side_encryption_by_default": [
+                  {
+                    "kms_master_key_id": "",
+                    "sse_algorithm": "AES256"
+                  }
+                ],
+                "blocked_encryption_types": [],
+                "bucket_key_enabled": false
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_s3_bucket_versioning.uploads",
+          "identity": {
+            "account_id": "",
+            "bucket": "code-clinic-dev-uploads",
+            "region": "eu-west-1"
+          },
+          "identity_schema_version": 1,
+          "mode": "managed",
+          "name": "uploads",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "sensitive_values": {
+            "versioning_configuration": [
+              {}
+            ]
+          },
+          "type": "aws_s3_bucket_versioning",
+          "values": {
+            "bucket": "code-clinic-dev-uploads",
+            "expected_bucket_owner": "",
+            "id": "code-clinic-dev-uploads",
+            "mfa": null,
+            "region": "eu-west-1",
+            "versioning_configuration": [
+              {
+                "mfa_delete": "Disabled",
+                "status": "Enabled"
+              }
+            ]
+          }
+        },
+        {
+          "address": "aws_sqs_queue.jobs",
+          "identity": {
+            "url": "http://moto:5000/123456789012/code-clinic-dev-jobs"
+          },
+          "identity_schema_version": 1,
+          "mode": "managed",
+          "name": "jobs",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "sensitive_values": {
+            "tags": {},
+            "tags_all": {}
+          },
+          "type": "aws_sqs_queue",
+          "values": {
+            "arn": "arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs",
+            "content_based_deduplication": false,
+            "deduplication_scope": "",
+            "delay_seconds": 0,
+            "fifo_queue": false,
+            "fifo_throughput_limit": "",
+            "id": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+            "kms_data_key_reuse_period_seconds": 300,
+            "kms_master_key_id": "",
+            "max_message_size": 262144,
+            "message_retention_seconds": 345600,
+            "name": "code-clinic-dev-jobs",
+            "name_prefix": "",
+            "policy": "",
+            "receive_wait_time_seconds": 0,
+            "redrive_allow_policy": "",
+            "redrive_policy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs-dlq\",\"maxReceiveCount\":5}",
+            "region": "eu-west-1",
+            "sqs_managed_sse_enabled": true,
+            "tags": {},
+            "tags_all": {
+              "environment": "dev",
+              "managed-by": "terraform",
+              "project": "code-clinic",
+              "stack": "app-storage"
+            },
+            "timeouts": null,
+            "url": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+            "visibility_timeout_seconds": 60
+          }
+        },
+        {
+          "address": "aws_sqs_queue.jobs_dlq",
+          "identity": {
+            "url": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq"
+          },
+          "identity_schema_version": 1,
+          "mode": "managed",
+          "name": "jobs_dlq",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "schema_version": 0,
+          "sensitive_values": {
+            "tags": {},
+            "tags_all": {}
+          },
+          "type": "aws_sqs_queue",
+          "values": {
+            "arn": "arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs-dlq",
+            "content_based_deduplication": false,
+            "deduplication_scope": "",
+            "delay_seconds": 0,
+            "fifo_queue": false,
+            "fifo_throughput_limit": "",
+            "id": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq",
+            "kms_data_key_reuse_period_seconds": 300,
+            "kms_master_key_id": "",
+            "max_message_size": 262144,
+            "message_retention_seconds": 1209600,
+            "name": "code-clinic-dev-jobs-dlq",
+            "name_prefix": "",
+            "policy": "",
+            "receive_wait_time_seconds": 0,
+            "redrive_allow_policy": "",
+            "redrive_policy": "",
+            "region": "eu-west-1",
+            "sqs_managed_sse_enabled": true,
+            "tags": {},
+            "tags_all": {
+              "environment": "dev",
+              "managed-by": "terraform",
+              "project": "code-clinic",
+              "stack": "app-storage"
+            },
+            "timeouts": null,
+            "url": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq",
+            "visibility_timeout_seconds": 30
+          }
+        }
+      ]
+    }
+  },
+  "prior_state": {
+    "format_version": "1.0",
+    "terraform_version": "1.17.2",
+    "values": {
+      "outputs": {
+        "bucket": {
+          "sensitive": false,
+          "type": "string",
+          "value": "code-clinic-dev-uploads"
+        },
+        "queue_url": {
+          "sensitive": false,
+          "type": "string",
+          "value": "http://moto:5000/123456789012/code-clinic-dev-jobs"
+        }
+      },
+      "root_module": {
+        "resources": [
+          {
+            "address": "aws_s3_bucket.uploads",
+            "identity": {
+              "account_id": "",
+              "bucket": "code-clinic-dev-uploads",
+              "region": "eu-west-1"
+            },
+            "identity_schema_version": 0,
+            "mode": "managed",
+            "name": "uploads",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "sensitive_values": {
+              "cors_rule": [],
+              "grant": [
+                {
+                  "permissions": [
+                    false
+                  ]
+                }
+              ],
+              "lifecycle_rule": [],
+              "logging": [],
+              "object_lock_configuration": [],
+              "replication_configuration": [],
+              "server_side_encryption_configuration": [
+                {
+                  "rule": [
+                    {
+                      "apply_server_side_encryption_by_default": [
+                        {}
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "tags": {},
+              "tags_all": {},
+              "versioning": [
+                {}
+              ],
+              "website": []
+            },
+            "type": "aws_s3_bucket",
+            "values": {
+              "acceleration_status": "",
+              "acl": null,
+              "arn": "arn:aws:s3:::code-clinic-dev-uploads",
+              "bucket": "code-clinic-dev-uploads",
+              "bucket_domain_name": "code-clinic-dev-uploads.s3.amazonaws.com",
+              "bucket_namespace": "global",
+              "bucket_prefix": "",
+              "bucket_region": "eu-west-1",
+              "bucket_regional_domain_name": "code-clinic-dev-uploads.s3.eu-west-1.amazonaws.com",
+              "cors_rule": [],
+              "force_destroy": false,
+              "grant": [
+                {
+                  "id": "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a",
+                  "permissions": [
+                    "FULL_CONTROL"
+                  ],
+                  "type": "CanonicalUser",
+                  "uri": ""
+                }
+              ],
+              "hosted_zone_id": "Z1BKCTXD74EZPE",
+              "id": "code-clinic-dev-uploads",
+              "lifecycle_rule": [],
+              "logging": [],
+              "object_lock_configuration": [],
+              "object_lock_enabled": false,
+              "policy": "",
+              "region": "eu-west-1",
+              "replication_configuration": [],
+              "request_payer": "",
+              "server_side_encryption_configuration": [
+                {
+                  "rule": [
+                    {
+                      "apply_server_side_encryption_by_default": [
+                        {
+                          "kms_master_key_id": "",
+                          "sse_algorithm": "AES256"
+                        }
+                      ],
+                      "bucket_key_enabled": false
+                    }
+                  ]
+                }
+              ],
+              "tags": {
+                "owner": "someone-in-the-console"
+              },
+              "tags_all": {
+                "owner": "someone-in-the-console"
+              },
+              "timeouts": null,
+              "versioning": [
+                {
+                  "enabled": false,
+                  "mfa_delete": false
+                }
+              ],
+              "website": [],
+              "website_domain": null,
+              "website_endpoint": null
+            }
+          },
+          {
+            "address": "aws_s3_bucket_public_access_block.uploads",
+            "depends_on": [
+              "aws_s3_bucket.uploads"
+            ],
+            "identity": {
+              "account_id": "",
+              "bucket": "code-clinic-dev-uploads",
+              "region": "eu-west-1"
+            },
+            "identity_schema_version": 0,
+            "mode": "managed",
+            "name": "uploads",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "sensitive_values": {},
+            "type": "aws_s3_bucket_public_access_block",
+            "values": {
+              "block_public_acls": true,
+              "block_public_policy": true,
+              "bucket": "code-clinic-dev-uploads",
+              "id": "code-clinic-dev-uploads",
+              "ignore_public_acls": true,
+              "region": "eu-west-1",
+              "restrict_public_buckets": true,
+              "skip_destroy": null
+            }
+          },
+          {
+            "address": "aws_s3_bucket_server_side_encryption_configuration.uploads",
+            "depends_on": [
+              "aws_s3_bucket.uploads"
+            ],
+            "identity": {
+              "account_id": "",
+              "bucket": "code-clinic-dev-uploads",
+              "region": "eu-west-1"
+            },
+            "identity_schema_version": 1,
+            "mode": "managed",
+            "name": "uploads",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "sensitive_values": {
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    {}
+                  ],
+                  "blocked_encryption_types": []
+                }
+              ]
+            },
+            "type": "aws_s3_bucket_server_side_encryption_configuration",
+            "values": {
+              "bucket": "code-clinic-dev-uploads",
+              "expected_bucket_owner": "",
+              "id": "code-clinic-dev-uploads",
+              "region": "eu-west-1",
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    {
+                      "kms_master_key_id": "",
+                      "sse_algorithm": "AES256"
+                    }
+                  ],
+                  "blocked_encryption_types": [],
+                  "bucket_key_enabled": false
+                }
+              ]
+            }
+          },
+          {
+            "address": "aws_s3_bucket_versioning.uploads",
+            "depends_on": [
+              "aws_s3_bucket.uploads"
+            ],
+            "identity": {
+              "account_id": "",
+              "bucket": "code-clinic-dev-uploads",
+              "region": "eu-west-1"
+            },
+            "identity_schema_version": 1,
+            "mode": "managed",
+            "name": "uploads",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "sensitive_values": {
+              "versioning_configuration": [
+                {}
+              ]
+            },
+            "type": "aws_s3_bucket_versioning",
+            "values": {
+              "bucket": "code-clinic-dev-uploads",
+              "expected_bucket_owner": "",
+              "id": "code-clinic-dev-uploads",
+              "mfa": null,
+              "region": "eu-west-1",
+              "versioning_configuration": [
+                {
+                  "mfa_delete": "Disabled",
+                  "status": "Suspended"
+                }
+              ]
+            }
+          },
+          {
+            "address": "aws_sqs_queue.jobs",
+            "depends_on": [
+              "aws_sqs_queue.jobs_dlq"
+            ],
+            "identity": {
+              "url": "http://moto:5000/123456789012/code-clinic-dev-jobs"
+            },
+            "identity_schema_version": 1,
+            "mode": "managed",
+            "name": "jobs",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "sensitive_values": {
+              "tags": {},
+              "tags_all": {}
+            },
+            "type": "aws_sqs_queue",
+            "values": {
+              "arn": "arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs",
+              "content_based_deduplication": false,
+              "deduplication_scope": "",
+              "delay_seconds": 0,
+              "fifo_queue": false,
+              "fifo_throughput_limit": "",
+              "id": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+              "kms_data_key_reuse_period_seconds": 300,
+              "kms_master_key_id": "",
+              "max_message_size": 262144,
+              "message_retention_seconds": 345600,
+              "name": "code-clinic-dev-jobs",
+              "name_prefix": "",
+              "policy": "",
+              "receive_wait_time_seconds": 0,
+              "redrive_allow_policy": "",
+              "redrive_policy": "{\"deadLetterTargetArn\": \"arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs-dlq\", \"maxReceiveCount\": 5}",
+              "region": "eu-west-1",
+              "sqs_managed_sse_enabled": true,
+              "tags": {},
+              "tags_all": {
+                "environment": "dev",
+                "managed-by": "terraform",
+                "project": "code-clinic",
+                "stack": "app-storage"
+              },
+              "timeouts": null,
+              "url": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+              "visibility_timeout_seconds": 300
+            }
+          },
+          {
+            "address": "aws_sqs_queue.jobs_dlq",
+            "identity": {
+              "url": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq"
+            },
+            "identity_schema_version": 1,
+            "mode": "managed",
+            "name": "jobs_dlq",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "schema_version": 0,
+            "sensitive_values": {
+              "tags": {},
+              "tags_all": {}
+            },
+            "type": "aws_sqs_queue",
+            "values": {
+              "arn": "arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs-dlq",
+              "content_based_deduplication": false,
+              "deduplication_scope": "",
+              "delay_seconds": 0,
+              "fifo_queue": false,
+              "fifo_throughput_limit": "",
+              "id": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq",
+              "kms_data_key_reuse_period_seconds": 300,
+              "kms_master_key_id": "",
+              "max_message_size": 262144,
+              "message_retention_seconds": 1209600,
+              "name": "code-clinic-dev-jobs-dlq",
+              "name_prefix": "",
+              "policy": "",
+              "receive_wait_time_seconds": 0,
+              "redrive_allow_policy": "",
+              "redrive_policy": "",
+              "region": "eu-west-1",
+              "sqs_managed_sse_enabled": true,
+              "tags": {},
+              "tags_all": {
+                "environment": "dev",
+                "managed-by": "terraform",
+                "project": "code-clinic",
+                "stack": "app-storage"
+              },
+              "timeouts": null,
+              "url": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq",
+              "visibility_timeout_seconds": 30
+            }
+          }
+        ]
+      }
+    }
+  },
+  "relevant_attributes": [
+    {
+      "attribute": [
+        "id"
+      ],
+      "resource": "aws_s3_bucket.uploads"
+    },
+    {
+      "attribute": [
+        "arn"
+      ],
+      "resource": "aws_sqs_queue.jobs_dlq"
+    }
+  ],
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.uploads",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "acceleration_status": "",
+          "acl": null,
+          "arn": "arn:aws:s3:::code-clinic-dev-uploads",
+          "bucket": "code-clinic-dev-uploads",
+          "bucket_domain_name": "code-clinic-dev-uploads.s3.amazonaws.com",
+          "bucket_namespace": "global",
+          "bucket_prefix": "",
+          "bucket_region": "eu-west-1",
+          "bucket_regional_domain_name": "code-clinic-dev-uploads.s3.eu-west-1.amazonaws.com",
+          "cors_rule": [],
+          "force_destroy": false,
+          "grant": [
+            {
+              "id": "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a",
+              "permissions": [
+                "FULL_CONTROL"
+              ],
+              "type": "CanonicalUser",
+              "uri": ""
+            }
+          ],
+          "hosted_zone_id": "Z1BKCTXD74EZPE",
+          "id": "code-clinic-dev-uploads",
+          "lifecycle_rule": [],
+          "logging": [],
+          "object_lock_configuration": [],
+          "object_lock_enabled": false,
+          "policy": "",
+          "region": "eu-west-1",
+          "replication_configuration": [],
+          "request_payer": "",
+          "server_side_encryption_configuration": [
+            {
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    {
+                      "kms_master_key_id": "",
+                      "sse_algorithm": "AES256"
+                    }
+                  ],
+                  "bucket_key_enabled": false
+                }
+              ]
+            }
+          ],
+          "tags": {},
+          "tags_all": {
+            "environment": "dev",
+            "managed-by": "terraform",
+            "project": "code-clinic",
+            "stack": "app-storage"
+          },
+          "timeouts": null,
+          "versioning": [
+            {
+              "enabled": false,
+              "mfa_delete": false
+            }
+          ],
+          "website": [],
+          "website_domain": null,
+          "website_endpoint": null
+        },
+        "after_identity": {
+          "account_id": "",
+          "bucket": "code-clinic-dev-uploads",
+          "region": "eu-west-1"
+        },
+        "after_sensitive": {
+          "cors_rule": [],
+          "grant": [
+            {
+              "permissions": [
+                false
+              ]
+            }
+          ],
+          "lifecycle_rule": [],
+          "logging": [],
+          "object_lock_configuration": [],
+          "replication_configuration": [],
+          "server_side_encryption_configuration": [
+            {
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    {}
+                  ]
+                }
+              ]
+            }
+          ],
+          "tags": {},
+          "tags_all": {},
+          "versioning": [
+            {}
+          ],
+          "website": []
+        },
+        "after_unknown": {},
+        "before": {
+          "acceleration_status": "",
+          "acl": null,
+          "arn": "arn:aws:s3:::code-clinic-dev-uploads",
+          "bucket": "code-clinic-dev-uploads",
+          "bucket_domain_name": "code-clinic-dev-uploads.s3.amazonaws.com",
+          "bucket_namespace": "global",
+          "bucket_prefix": "",
+          "bucket_region": "eu-west-1",
+          "bucket_regional_domain_name": "code-clinic-dev-uploads.s3.eu-west-1.amazonaws.com",
+          "cors_rule": [],
+          "force_destroy": false,
+          "grant": [
+            {
+              "id": "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a",
+              "permissions": [
+                "FULL_CONTROL"
+              ],
+              "type": "CanonicalUser",
+              "uri": ""
+            }
+          ],
+          "hosted_zone_id": "Z1BKCTXD74EZPE",
+          "id": "code-clinic-dev-uploads",
+          "lifecycle_rule": [],
+          "logging": [],
+          "object_lock_configuration": [],
+          "object_lock_enabled": false,
+          "policy": "",
+          "region": "eu-west-1",
+          "replication_configuration": [],
+          "request_payer": "",
+          "server_side_encryption_configuration": [
+            {
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    {
+                      "kms_master_key_id": "",
+                      "sse_algorithm": "AES256"
+                    }
+                  ],
+                  "bucket_key_enabled": false
+                }
+              ]
+            }
+          ],
+          "tags": {
+            "owner": "someone-in-the-console"
+          },
+          "tags_all": {
+            "owner": "someone-in-the-console"
+          },
+          "timeouts": null,
+          "versioning": [
+            {
+              "enabled": false,
+              "mfa_delete": false
+            }
+          ],
+          "website": [],
+          "website_domain": null,
+          "website_endpoint": null
+        },
+        "before_identity": {
+          "account_id": "",
+          "bucket": "code-clinic-dev-uploads",
+          "region": "eu-west-1"
+        },
+        "before_sensitive": {
+          "cors_rule": [],
+          "grant": [
+            {
+              "permissions": [
+                false
+              ]
+            }
+          ],
+          "lifecycle_rule": [],
+          "logging": [],
+          "object_lock_configuration": [],
+          "replication_configuration": [],
+          "server_side_encryption_configuration": [
+            {
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    {}
+                  ]
+                }
+              ]
+            }
+          ],
+          "tags": {},
+          "tags_all": {},
+          "versioning": [
+            {}
+          ],
+          "website": []
+        }
+      },
+      "mode": "managed",
+      "name": "uploads",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_s3_bucket"
+    },
+    {
+      "address": "aws_s3_bucket_public_access_block.uploads",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "after": {
+          "block_public_acls": true,
+          "block_public_policy": true,
+          "bucket": "code-clinic-dev-uploads",
+          "id": "code-clinic-dev-uploads",
+          "ignore_public_acls": true,
+          "region": "eu-west-1",
+          "restrict_public_buckets": true,
+          "skip_destroy": null
+        },
+        "after_identity": {
+          "account_id": "",
+          "bucket": "code-clinic-dev-uploads",
+          "region": "eu-west-1"
+        },
+        "after_sensitive": {},
+        "after_unknown": {},
+        "before": {
+          "block_public_acls": true,
+          "block_public_policy": true,
+          "bucket": "code-clinic-dev-uploads",
+          "id": "code-clinic-dev-uploads",
+          "ignore_public_acls": true,
+          "region": "eu-west-1",
+          "restrict_public_buckets": true,
+          "skip_destroy": null
+        },
+        "before_identity": {
+          "account_id": "",
+          "bucket": "code-clinic-dev-uploads",
+          "region": "eu-west-1"
+        },
+        "before_sensitive": {}
+      },
+      "mode": "managed",
+      "name": "uploads",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_s3_bucket_public_access_block"
+    },
+    {
+      "address": "aws_s3_bucket_server_side_encryption_configuration.uploads",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "after": {
+          "bucket": "code-clinic-dev-uploads",
+          "expected_bucket_owner": "",
+          "id": "code-clinic-dev-uploads",
+          "region": "eu-west-1",
+          "rule": [
+            {
+              "apply_server_side_encryption_by_default": [
+                {
+                  "kms_master_key_id": "",
+                  "sse_algorithm": "AES256"
+                }
+              ],
+              "blocked_encryption_types": [],
+              "bucket_key_enabled": false
+            }
+          ]
+        },
+        "after_identity": {
+          "account_id": "",
+          "bucket": "code-clinic-dev-uploads",
+          "region": "eu-west-1"
+        },
+        "after_sensitive": {
+          "rule": [
+            {
+              "apply_server_side_encryption_by_default": [
+                {}
+              ],
+              "blocked_encryption_types": []
+            }
+          ]
+        },
+        "after_unknown": {},
+        "before": {
+          "bucket": "code-clinic-dev-uploads",
+          "expected_bucket_owner": "",
+          "id": "code-clinic-dev-uploads",
+          "region": "eu-west-1",
+          "rule": [
+            {
+              "apply_server_side_encryption_by_default": [
+                {
+                  "kms_master_key_id": "",
+                  "sse_algorithm": "AES256"
+                }
+              ],
+              "blocked_encryption_types": [],
+              "bucket_key_enabled": false
+            }
+          ]
+        },
+        "before_identity": {
+          "account_id": "",
+          "bucket": "code-clinic-dev-uploads",
+          "region": "eu-west-1"
+        },
+        "before_sensitive": {
+          "rule": [
+            {
+              "apply_server_side_encryption_by_default": [
+                {}
+              ],
+              "blocked_encryption_types": []
+            }
+          ]
+        }
+      },
+      "mode": "managed",
+      "name": "uploads",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_s3_bucket_server_side_encryption_configuration"
+    },
+    {
+      "address": "aws_s3_bucket_versioning.uploads",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "bucket": "code-clinic-dev-uploads",
+          "expected_bucket_owner": "",
+          "id": "code-clinic-dev-uploads",
+          "mfa": null,
+          "region": "eu-west-1",
+          "versioning_configuration": [
+            {
+              "mfa_delete": "Disabled",
+              "status": "Enabled"
+            }
+          ]
+        },
+        "after_identity": {
+          "account_id": "",
+          "bucket": "code-clinic-dev-uploads",
+          "region": "eu-west-1"
+        },
+        "after_sensitive": {
+          "versioning_configuration": [
+            {}
+          ]
+        },
+        "after_unknown": {},
+        "before": {
+          "bucket": "code-clinic-dev-uploads",
+          "expected_bucket_owner": "",
+          "id": "code-clinic-dev-uploads",
+          "mfa": null,
+          "region": "eu-west-1",
+          "versioning_configuration": [
+            {
+              "mfa_delete": "Disabled",
+              "status": "Suspended"
+            }
+          ]
+        },
+        "before_identity": {
+          "account_id": "",
+          "bucket": "code-clinic-dev-uploads",
+          "region": "eu-west-1"
+        },
+        "before_sensitive": {
+          "versioning_configuration": [
+            {}
+          ]
+        }
+      },
+      "mode": "managed",
+      "name": "uploads",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_s3_bucket_versioning"
+    },
+    {
+      "address": "aws_sqs_queue.jobs",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "arn": "arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs",
+          "content_based_deduplication": false,
+          "deduplication_scope": "",
+          "delay_seconds": 0,
+          "fifo_queue": false,
+          "fifo_throughput_limit": "",
+          "id": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+          "kms_data_key_reuse_period_seconds": 300,
+          "kms_master_key_id": "",
+          "max_message_size": 262144,
+          "message_retention_seconds": 345600,
+          "name": "code-clinic-dev-jobs",
+          "name_prefix": "",
+          "policy": "",
+          "receive_wait_time_seconds": 0,
+          "redrive_allow_policy": "",
+          "redrive_policy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs-dlq\",\"maxReceiveCount\":5}",
+          "region": "eu-west-1",
+          "sqs_managed_sse_enabled": true,
+          "tags": {},
+          "tags_all": {
+            "environment": "dev",
+            "managed-by": "terraform",
+            "project": "code-clinic",
+            "stack": "app-storage"
+          },
+          "timeouts": null,
+          "url": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+          "visibility_timeout_seconds": 60
+        },
+        "after_identity": {
+          "url": "http://moto:5000/123456789012/code-clinic-dev-jobs"
+        },
+        "after_sensitive": {
+          "tags": {},
+          "tags_all": {}
+        },
+        "after_unknown": {},
+        "before": {
+          "arn": "arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs",
+          "content_based_deduplication": false,
+          "deduplication_scope": "",
+          "delay_seconds": 0,
+          "fifo_queue": false,
+          "fifo_throughput_limit": "",
+          "id": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+          "kms_data_key_reuse_period_seconds": 300,
+          "kms_master_key_id": "",
+          "max_message_size": 262144,
+          "message_retention_seconds": 345600,
+          "name": "code-clinic-dev-jobs",
+          "name_prefix": "",
+          "policy": "",
+          "receive_wait_time_seconds": 0,
+          "redrive_allow_policy": "",
+          "redrive_policy": "{\"deadLetterTargetArn\": \"arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs-dlq\", \"maxReceiveCount\": 5}",
+          "region": "eu-west-1",
+          "sqs_managed_sse_enabled": true,
+          "tags": {},
+          "tags_all": {
+            "environment": "dev",
+            "managed-by": "terraform",
+            "project": "code-clinic",
+            "stack": "app-storage"
+          },
+          "timeouts": null,
+          "url": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+          "visibility_timeout_seconds": 300
+        },
+        "before_identity": {
+          "url": "http://moto:5000/123456789012/code-clinic-dev-jobs"
+        },
+        "before_sensitive": {
+          "tags": {},
+          "tags_all": {}
+        }
+      },
+      "mode": "managed",
+      "name": "jobs",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_sqs_queue"
+    },
+    {
+      "address": "aws_sqs_queue.jobs_dlq",
+      "change": {
+        "actions": [
+          "no-op"
+        ],
+        "after": {
+          "arn": "arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs-dlq",
+          "content_based_deduplication": false,
+          "deduplication_scope": "",
+          "delay_seconds": 0,
+          "fifo_queue": false,
+          "fifo_throughput_limit": "",
+          "id": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq",
+          "kms_data_key_reuse_period_seconds": 300,
+          "kms_master_key_id": "",
+          "max_message_size": 262144,
+          "message_retention_seconds": 1209600,
+          "name": "code-clinic-dev-jobs-dlq",
+          "name_prefix": "",
+          "policy": "",
+          "receive_wait_time_seconds": 0,
+          "redrive_allow_policy": "",
+          "redrive_policy": "",
+          "region": "eu-west-1",
+          "sqs_managed_sse_enabled": true,
+          "tags": {},
+          "tags_all": {
+            "environment": "dev",
+            "managed-by": "terraform",
+            "project": "code-clinic",
+            "stack": "app-storage"
+          },
+          "timeouts": null,
+          "url": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq",
+          "visibility_timeout_seconds": 30
+        },
+        "after_identity": {
+          "url": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq"
+        },
+        "after_sensitive": {
+          "tags": {},
+          "tags_all": {}
+        },
+        "after_unknown": {},
+        "before": {
+          "arn": "arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs-dlq",
+          "content_based_deduplication": false,
+          "deduplication_scope": "",
+          "delay_seconds": 0,
+          "fifo_queue": false,
+          "fifo_throughput_limit": "",
+          "id": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq",
+          "kms_data_key_reuse_period_seconds": 300,
+          "kms_master_key_id": "",
+          "max_message_size": 262144,
+          "message_retention_seconds": 1209600,
+          "name": "code-clinic-dev-jobs-dlq",
+          "name_prefix": "",
+          "policy": "",
+          "receive_wait_time_seconds": 0,
+          "redrive_allow_policy": "",
+          "redrive_policy": "",
+          "region": "eu-west-1",
+          "sqs_managed_sse_enabled": true,
+          "tags": {},
+          "tags_all": {
+            "environment": "dev",
+            "managed-by": "terraform",
+            "project": "code-clinic",
+            "stack": "app-storage"
+          },
+          "timeouts": null,
+          "url": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq",
+          "visibility_timeout_seconds": 30
+        },
+        "before_identity": {
+          "url": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq"
+        },
+        "before_sensitive": {
+          "tags": {},
+          "tags_all": {}
+        }
+      },
+      "mode": "managed",
+      "name": "jobs_dlq",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_sqs_queue"
+    }
+  ],
+  "resource_drift": [
+    {
+      "address": "aws_s3_bucket.uploads",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "acceleration_status": "",
+          "acl": null,
+          "arn": "arn:aws:s3:::code-clinic-dev-uploads",
+          "bucket": "code-clinic-dev-uploads",
+          "bucket_domain_name": "code-clinic-dev-uploads.s3.amazonaws.com",
+          "bucket_namespace": "global",
+          "bucket_prefix": "",
+          "bucket_region": "eu-west-1",
+          "bucket_regional_domain_name": "code-clinic-dev-uploads.s3.eu-west-1.amazonaws.com",
+          "cors_rule": [],
+          "force_destroy": false,
+          "grant": [
+            {
+              "id": "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a",
+              "permissions": [
+                "FULL_CONTROL"
+              ],
+              "type": "CanonicalUser",
+              "uri": ""
+            }
+          ],
+          "hosted_zone_id": "Z1BKCTXD74EZPE",
+          "id": "code-clinic-dev-uploads",
+          "lifecycle_rule": [],
+          "logging": [],
+          "object_lock_configuration": [],
+          "object_lock_enabled": false,
+          "policy": "",
+          "region": "eu-west-1",
+          "replication_configuration": [],
+          "request_payer": "",
+          "server_side_encryption_configuration": [
+            {
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    {
+                      "kms_master_key_id": "",
+                      "sse_algorithm": "AES256"
+                    }
+                  ],
+                  "bucket_key_enabled": false
+                }
+              ]
+            }
+          ],
+          "tags": {
+            "owner": "someone-in-the-console"
+          },
+          "tags_all": {
+            "owner": "someone-in-the-console"
+          },
+          "timeouts": null,
+          "versioning": [
+            {
+              "enabled": false,
+              "mfa_delete": false
+            }
+          ],
+          "website": [],
+          "website_domain": null,
+          "website_endpoint": null
+        },
+        "after_sensitive": {
+          "cors_rule": [],
+          "grant": [
+            {
+              "permissions": [
+                false
+              ]
+            }
+          ],
+          "lifecycle_rule": [],
+          "logging": [],
+          "object_lock_configuration": [],
+          "replication_configuration": [],
+          "server_side_encryption_configuration": [
+            {
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    {}
+                  ]
+                }
+              ]
+            }
+          ],
+          "tags": {},
+          "tags_all": {},
+          "versioning": [
+            {}
+          ],
+          "website": []
+        },
+        "after_unknown": {},
+        "before": {
+          "acceleration_status": "",
+          "acl": null,
+          "arn": "arn:aws:s3:::code-clinic-dev-uploads",
+          "bucket": "code-clinic-dev-uploads",
+          "bucket_domain_name": "code-clinic-dev-uploads.s3.amazonaws.com",
+          "bucket_namespace": "global",
+          "bucket_prefix": "",
+          "bucket_region": "eu-west-1",
+          "bucket_regional_domain_name": "code-clinic-dev-uploads.s3.eu-west-1.amazonaws.com",
+          "cors_rule": [],
+          "force_destroy": false,
+          "grant": [
+            {
+              "id": "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a",
+              "permissions": [
+                "FULL_CONTROL"
+              ],
+              "type": "CanonicalUser",
+              "uri": ""
+            }
+          ],
+          "hosted_zone_id": "Z1BKCTXD74EZPE",
+          "id": "code-clinic-dev-uploads",
+          "lifecycle_rule": [],
+          "logging": [],
+          "object_lock_configuration": [],
+          "object_lock_enabled": false,
+          "policy": "",
+          "region": "eu-west-1",
+          "replication_configuration": [],
+          "request_payer": "",
+          "server_side_encryption_configuration": [],
+          "tags": null,
+          "tags_all": {},
+          "timeouts": null,
+          "versioning": [
+            {
+              "enabled": false,
+              "mfa_delete": false
+            }
+          ],
+          "website": [],
+          "website_domain": null,
+          "website_endpoint": null
+        },
+        "before_sensitive": {
+          "cors_rule": [],
+          "grant": [
+            {
+              "permissions": [
+                false
+              ]
+            }
+          ],
+          "lifecycle_rule": [],
+          "logging": [],
+          "object_lock_configuration": [],
+          "replication_configuration": [],
+          "server_side_encryption_configuration": [],
+          "tags_all": {},
+          "versioning": [
+            {}
+          ],
+          "website": []
+        }
+      },
+      "mode": "managed",
+      "name": "uploads",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_s3_bucket"
+    },
+    {
+      "address": "aws_s3_bucket_versioning.uploads",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "bucket": "code-clinic-dev-uploads",
+          "expected_bucket_owner": "",
+          "id": "code-clinic-dev-uploads",
+          "mfa": null,
+          "region": "eu-west-1",
+          "versioning_configuration": [
+            {
+              "mfa_delete": "Disabled",
+              "status": "Suspended"
+            }
+          ]
+        },
+        "after_sensitive": {
+          "versioning_configuration": [
+            {}
+          ]
+        },
+        "after_unknown": {},
+        "before": {
+          "bucket": "code-clinic-dev-uploads",
+          "expected_bucket_owner": "",
+          "id": "code-clinic-dev-uploads",
+          "mfa": null,
+          "region": "eu-west-1",
+          "versioning_configuration": [
+            {
+              "mfa_delete": "Disabled",
+              "status": "Enabled"
+            }
+          ]
+        },
+        "before_sensitive": {
+          "versioning_configuration": [
+            {}
+          ]
+        }
+      },
+      "mode": "managed",
+      "name": "uploads",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_s3_bucket_versioning"
+    },
+    {
+      "address": "aws_sqs_queue.jobs",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "arn": "arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs",
+          "content_based_deduplication": false,
+          "deduplication_scope": "",
+          "delay_seconds": 0,
+          "fifo_queue": false,
+          "fifo_throughput_limit": "",
+          "id": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+          "kms_data_key_reuse_period_seconds": 300,
+          "kms_master_key_id": "",
+          "max_message_size": 262144,
+          "message_retention_seconds": 345600,
+          "name": "code-clinic-dev-jobs",
+          "name_prefix": "",
+          "policy": "",
+          "receive_wait_time_seconds": 0,
+          "redrive_allow_policy": "",
+          "redrive_policy": "{\"deadLetterTargetArn\": \"arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs-dlq\", \"maxReceiveCount\": 5}",
+          "region": "eu-west-1",
+          "sqs_managed_sse_enabled": true,
+          "tags": {},
+          "tags_all": {
+            "environment": "dev",
+            "managed-by": "terraform",
+            "project": "code-clinic",
+            "stack": "app-storage"
+          },
+          "timeouts": null,
+          "url": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+          "visibility_timeout_seconds": 300
+        },
+        "after_sensitive": {
+          "tags": {},
+          "tags_all": {}
+        },
+        "after_unknown": {},
+        "before": {
+          "arn": "arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs",
+          "content_based_deduplication": false,
+          "deduplication_scope": "",
+          "delay_seconds": 0,
+          "fifo_queue": false,
+          "fifo_throughput_limit": "",
+          "id": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+          "kms_data_key_reuse_period_seconds": 300,
+          "kms_master_key_id": "",
+          "max_message_size": 262144,
+          "message_retention_seconds": 345600,
+          "name": "code-clinic-dev-jobs",
+          "name_prefix": "",
+          "policy": "",
+          "receive_wait_time_seconds": 0,
+          "redrive_allow_policy": "",
+          "redrive_policy": "{\"deadLetterTargetArn\": \"arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs-dlq\", \"maxReceiveCount\": 5}",
+          "region": "eu-west-1",
+          "sqs_managed_sse_enabled": true,
+          "tags": null,
+          "tags_all": {
+            "environment": "dev",
+            "managed-by": "terraform",
+            "project": "code-clinic",
+            "stack": "app-storage"
+          },
+          "timeouts": null,
+          "url": "http://moto:5000/123456789012/code-clinic-dev-jobs",
+          "visibility_timeout_seconds": 60
+        },
+        "before_sensitive": {
+          "tags_all": {}
+        }
+      },
+      "mode": "managed",
+      "name": "jobs",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_sqs_queue"
+    },
+    {
+      "address": "aws_sqs_queue.jobs_dlq",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "after": {
+          "arn": "arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs-dlq",
+          "content_based_deduplication": false,
+          "deduplication_scope": "",
+          "delay_seconds": 0,
+          "fifo_queue": false,
+          "fifo_throughput_limit": "",
+          "id": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq",
+          "kms_data_key_reuse_period_seconds": 300,
+          "kms_master_key_id": "",
+          "max_message_size": 262144,
+          "message_retention_seconds": 1209600,
+          "name": "code-clinic-dev-jobs-dlq",
+          "name_prefix": "",
+          "policy": "",
+          "receive_wait_time_seconds": 0,
+          "redrive_allow_policy": "",
+          "redrive_policy": "",
+          "region": "eu-west-1",
+          "sqs_managed_sse_enabled": true,
+          "tags": {},
+          "tags_all": {
+            "environment": "dev",
+            "managed-by": "terraform",
+            "project": "code-clinic",
+            "stack": "app-storage"
+          },
+          "timeouts": null,
+          "url": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq",
+          "visibility_timeout_seconds": 30
+        },
+        "after_sensitive": {
+          "tags": {},
+          "tags_all": {}
+        },
+        "after_unknown": {},
+        "before": {
+          "arn": "arn:aws:sqs:eu-west-1:123456789012:code-clinic-dev-jobs-dlq",
+          "content_based_deduplication": false,
+          "deduplication_scope": "",
+          "delay_seconds": 0,
+          "fifo_queue": false,
+          "fifo_throughput_limit": "",
+          "id": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq",
+          "kms_data_key_reuse_period_seconds": 300,
+          "kms_master_key_id": "",
+          "max_message_size": 262144,
+          "message_retention_seconds": 1209600,
+          "name": "code-clinic-dev-jobs-dlq",
+          "name_prefix": "",
+          "policy": "",
+          "receive_wait_time_seconds": 0,
+          "redrive_allow_policy": "",
+          "redrive_policy": "",
+          "region": "eu-west-1",
+          "sqs_managed_sse_enabled": true,
+          "tags": null,
+          "tags_all": {
+            "environment": "dev",
+            "managed-by": "terraform",
+            "project": "code-clinic",
+            "stack": "app-storage"
+          },
+          "timeouts": null,
+          "url": "http://moto:5000/123456789012/code-clinic-dev-jobs-dlq",
+          "visibility_timeout_seconds": 30
+        },
+        "before_sensitive": {
+          "tags_all": {}
+        }
+      },
+      "mode": "managed",
+      "name": "jobs_dlq",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "type": "aws_sqs_queue"
+    }
+  ],
+  "terraform_version": "1.17.2",
+  "variables": {
+    "aws_endpoint": {
+      "value": "http://moto:5000"
+    },
+    "environment": {
+      "value": "dev"
+    },
+    "job_timeout_seconds": {
+      "value": 60
+    },
+    "project": {
+      "value": "code-clinic"
+    },
+    "region": {
+      "value": "eu-west-1"
+    }
+  }
+}

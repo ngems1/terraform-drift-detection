@@ -1,0 +1,12 @@
+# Accepted differences for the LOCAL e2e test only. Both are Moto (the AWS emulator) quirks
+# that would show up as a change on every plan ("perpetual diffs"). Real providers have
+# their own; this file is where a team records them, each with a reason.
+[[ignore]]
+address    = "aws_s3_bucket.uploads"
+attributes = ["tags_all"]
+reason     = "Moto does not return the tags set when the bucket is created"
+
+[[ignore]]
+address    = "aws_sqs_queue.jobs"
+attributes = ["redrive_policy"]
+reason     = "Moto returns the redrive policy JSON with spaces; the provider sees a text change"
