@@ -11,7 +11,7 @@ MOTO_IMAGE := motoserver/moto:5.2.5
 NET := drift-e2e
 STACK := stacks/app-storage
 
-.PHONY: help setup lint test tf e2e fixtures security docs demo demo-gif ci-local all
+.PHONY: help setup lint test tf e2e lab-shell lab-down fixtures security docs demo demo-gif ci-local all
 
 help:      ## list targets
 	@grep -E '^[a-z0-9-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -45,6 +45,17 @@ e2e:       ## apply, drift it out of band, detect, notify a fake Slack/Teams: al
 	  -e UV_PROJECT_ENVIRONMENT=/tmp/venv -v "$(CURDIR):/work" -w /work $(IMAGE) bash tests/e2e/run.sh \
 	  || { docker rm -f drift-moto >/dev/null; exit 1; }
 	docker rm -f drift-moto >/dev/null
+
+lab-shell: ## Moto + a shell with tests/e2e/lab.sh loaded, for the drills (Docker)
+	docker network create $(NET) >/dev/null 2>&1 || true
+	docker start drift-lab-moto >/dev/null 2>&1 || docker run -d --name drift-lab-moto --network $(NET) $(MOTO_IMAGE) >/dev/null
+	docker run --rm -it --network $(NET) -e AWS_ENDPOINT=http://drift-lab-moto:5000 \
+	  -e UV_PROJECT_ENVIRONMENT=/tmp/venv -v "$(CURDIR):/work" -w /work $(IMAGE) \
+	  bash --rcfile tests/e2e/lab.sh
+
+lab-down:  ## stop the drill lab's Moto (all its "AWS" resources vanish with it)
+	docker rm -f drift-lab-moto >/dev/null 2>&1 || true
+	rm -rf .lab
 
 fixtures:  e2e ## re-generate tests/fixtures/plans/ from the e2e run (review the diff!)
 	$(UV) run python scripts/save-fixtures.py

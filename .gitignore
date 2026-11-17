@@ -41,3 +41,4 @@ examples/terraform/**/infracost.json
 out/
 .e2e/
 backend.local.hcl
+.lab/
