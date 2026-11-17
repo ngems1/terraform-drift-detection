@@ -1,0 +1,8 @@
+# Accepted differences: drift that is expected and must not alert. Every entry needs a reason;
+# review this file like code. An empty file means "every difference is reported".
+#
+# Example:
+# [[ignore]]
+# address    = "aws_s3_bucket.*"
+# attributes = ["tags"]
+# reason     = "the security team's tagging Lambda adds compliance tags to every bucket"

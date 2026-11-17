@@ -1,0 +1,73 @@
+# CI: the hub's shared checks + the full pipeline against a local AWS emulator (Moto).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1" # weekly: a new Terraform, provider or Moto release breaks it here first
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repo:
+    uses: ngems1/code-clinic/.github/workflows/repo-checks.yml@v1
+
+  python-oldest:
+    uses: ngems1/code-clinic/.github/workflows/python-checks.yml@v1
+    with:
+      python-version: "3.11"
+
+  python-latest:
+    uses: ngems1/code-clinic/.github/workflows/python-checks.yml@v1
+    with:
+      python-version: "3.14"
+
+  shell:
+    uses: ngems1/code-clinic/.github/workflows/shell-checks.yml@v1
+    with:
+      bats-tests: tests/bats
+
+  terraform:
+    uses: ngems1/code-clinic/.github/workflows/terraform-checks.yml@v1
+    permissions:
+      contents: read
+      pull-requests: write
+    with:
+      working-directory: stacks/app-storage
+      infracost-path: "."
+    secrets: inherit
+
+  e2e:
+    name: e2e (Moto, out-of-band changes, Slack + Teams payloads)
+    runs-on: ubuntu-24.04
+    services:
+      moto:
+        image: motoserver/moto:5.2.5
+        ports:
+          - 5000:5000
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@v4.0.1
+        with:
+          terraform_version: "1.17.2"
+          terraform_wrapper: false
+      - uses: astral-sh/setup-uv@v10.3.3
+      - name: tests/e2e/run.sh
+        env:
+          AWS_ENDPOINT: http://localhost:5000
+        run: |
+          uv sync --locked
+          tests/e2e/run.sh

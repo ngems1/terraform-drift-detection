@@ -1,0 +1,4 @@
+[
+  { "stack": "app-storage", "environment": "staging", "region": "eu-west-1" },
+  { "stack": "app-storage", "environment": "prod", "region": "eu-west-1" }
+]

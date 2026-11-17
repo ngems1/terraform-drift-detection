@@ -1,0 +1,143 @@
+# The product: every weekday morning, plan every stack in every environment with a READ-ONLY
+# role, turn each plan into a drift report, and post ONE message to Slack and/or Teams.
+#
+# Setup (README, "Usage"): repository variable DRIFT_ROLE_ARN (an IAM role trusting GitHub
+# OIDC, read-only + state read), secrets SLACK_WEBHOOK_URL and/or TEAMS_WEBHOOK_URL, and
+# optionally INFRACOST_API_KEY. Targets live in drift-targets.json.
+name: drift
+
+on:
+  schedule:
+    - cron: "17 6 * * 1-5" # 06:17 UTC on weekdays (off the hour: GitHub's scheduler is busiest at :00)
+  workflow_dispatch:
+    inputs:
+      heartbeat:
+        description: Post even if everything is clean
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: drift
+  cancel-in-progress: false
+
+env:
+  # renovate: datasource=github-releases depName=hashicorp/terraform
+  TERRAFORM_VERSION: "1.17.2"
+
+jobs:
+  targets:
+    name: read drift-targets.json
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.read.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - id: read
+        run: echo "matrix=$(jq -c . drift-targets.json)" >> "$GITHUB_OUTPUT"
+
+  plan:
+    name: plan ${{ matrix.stack }}/${{ matrix.environment }}
+    needs: targets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write # OIDC to AWS: no stored access keys
+    strategy:
+      fail-fast: false # one broken stack must not hide the others
+      matrix:
+        include: ${{ fromJSON(needs.targets.outputs.matrix) }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+      - uses: astral-sh/setup-uv@v10.3.3
+      - name: AWS credentials (OIDC, read-only role)
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.DRIFT_ROLE_ARN }}
+          aws-region: ${{ matrix.region }}
+      - name: install infracost (only with an API key)
+        env:
+          INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
+          # renovate: datasource=github-releases depName=infracost/infracost
+          VERSION: v0.10.50
+        run: |
+          [ -n "$INFRACOST_API_KEY" ] || { echo "no INFRACOST_API_KEY: reports without cost"; exit 0; }
+          cd "$RUNNER_TEMP"
+          base="https://github.com/infracost/infracost/releases/download/${VERSION}"
+          curl -fsSLO "$base/infracost-linux-amd64.tar.gz"
+          curl -fsSLO "$base/infracost-linux-amd64.tar.gz.sha256"
+          sha256sum -c infracost-linux-amd64.tar.gz.sha256
+          tar -xzf infracost-linux-amd64.tar.gz
+          sudo install infracost-linux-amd64 /usr/local/bin/infracost
+      - name: detect drift
+        env:
+          BACKEND_CONFIG: ${{ github.workspace }}/backends/${{ matrix.environment }}.hcl
+          TF_VAR_environment: ${{ matrix.environment }}
+          TF_VAR_region: ${{ matrix.region }}
+          INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
+          DRIFTWATCH: uv run driftwatch
+          STACK: ${{ matrix.stack }}
+          ENVIRONMENT: ${{ matrix.environment }}
+        run: scripts/detect-drift.sh "stacks/$STACK" "$STACK/$ENVIRONMENT" out
+      # Only the small JSON report is uploaded, never the plan (it contains secrets in clear text).
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: report-${{ matrix.stack }}-${{ matrix.environment }}
+          path: out/*.json
+          retention-days: 14
+
+  notify:
+    name: notify Slack / Teams
+    needs: [targets, plan]
+    if: always() # a failed plan job must still produce a message
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.3.3
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          pattern: report-*
+          path: out
+          merge-multiple: true
+      - name: an error report for every target that produced no report
+        env:
+          MATRIX: ${{ needs.targets.outputs.matrix }}
+        run: |
+          mkdir -p out
+          echo "$MATRIX" | jq -r '.[] | "\(.stack)/\(.environment)"' | while read -r name; do
+            f="out/${name//\//-}.json"
+            [ -f "$f" ] || uv run driftwatch report --stack "$name" --out "$f" \
+              --error "the plan job failed before writing a report (credentials? runner?): see the workflow run"
+          done
+      - name: notify
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          HEARTBEAT: ${{ inputs.heartbeat }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          args=(--run-url "$RUN_URL" --markdown "$GITHUB_STEP_SUMMARY")
+          [ -n "$SLACK_WEBHOOK_URL" ] && args+=(--slack-webhook-env SLACK_WEBHOOK_URL)
+          [ -n "$TEAMS_WEBHOOK_URL" ] && args+=(--teams-webhook-env TEAMS_WEBHOOK_URL)
+          # Monday's run always posts: silence the rest of the week then means "clean", not "broken".
+          if [ "$HEARTBEAT" = "true" ] || [ "$(date -u +%u)" = 1 ]; then args+=(--heartbeat); fi
+          uv run driftwatch notify out/*.json "${args[@]}"
