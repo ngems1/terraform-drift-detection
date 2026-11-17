@@ -39,6 +39,8 @@ EOF
 
 run_detect() { run "$repo/scripts/detect-drift.sh" stacks/x app/prod out; }
 arg() { grep -qxF -- "$1" "$BATS_TEST_TMPDIR/args"; }
+# A bare `! cmd` never fails a bats test (SC2314); inside a function the negation counts.
+no_arg() { ! grep -qxF -- "$1" "$BATS_TEST_TMPDIR/args"; }
 
 @test "plan exit 0 (no changes): report from the plan JSON" {
   run_detect
@@ -59,7 +61,7 @@ arg() { grep -qxF -- "$1" "$BATS_TEST_TMPDIR/args"; }
   [ "$status" -eq 0 ]
   arg --error
   grep -q "terraform plan failed (exit 1):.*provider crashed" "$BATS_TEST_TMPDIR/args"
-  ! arg --plan
+  no_arg --plan
 }
 
 @test "init fails (expired credentials): an error report" {
@@ -70,12 +72,12 @@ arg() { grep -qxF -- "$1" "$BATS_TEST_TMPDIR/args"; }
 
 @test "infracost runs only with an API key, and its failure doesn't lose the report" {
   run_detect
-  ! arg --infracost
+  no_arg --infracost
   INFRACOST_API_KEY=k run_detect
   arg --infracost
   INFRACOST_API_KEY=k STUB_INFRACOST_RC=1 run_detect
   [ "$status" -eq 0 ]
-  ! arg --infracost
+  no_arg --infracost
   [[ "$output" == *"infracost failed; reporting without cost"* ]]
 }
 
