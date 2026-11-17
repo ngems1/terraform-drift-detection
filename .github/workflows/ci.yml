@@ -65,6 +65,18 @@ jobs:
           terraform_version: "1.17.2"
           terraform_wrapper: false
       - uses: astral-sh/setup-uv@v10.3.3
+      # GitHub's ubuntu image ships the AWS CLI today, but a test shouldn't depend on what a
+      # runner image happens to contain (act's images don't have it).
+      - name: AWS CLI (pinned, only if missing)
+        env:
+          # renovate: datasource=github-tags depName=aws/aws-cli
+          AWSCLI_VERSION: "2.40.3"
+        run: |
+          command -v aws && exit 0
+          cd "$RUNNER_TEMP"
+          curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o awscli.zip
+          unzip -q awscli.zip && sudo ./aws/install > /dev/null
+          aws --version
       - name: tests/e2e/run.sh
         env:
           AWS_ENDPOINT: http://localhost:5000
