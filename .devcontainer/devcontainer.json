@@ -1,0 +1,25 @@
+{
+  // Opens this repo in the course dev container: every tool pinned, nothing to install.
+  // Codespaces: Code → Codespaces → Create codespace, then `make test`.
+  "name": "terraform-drift-detection",
+  "image": "ghcr.io/ngems1/code-clinic-devcontainer:1.1.0",
+  "features": {
+    // Docker is needed for `make e2e` (Moto) and `make ci-local` (act).
+    "ghcr.io/devcontainers/features/docker-in-docker:2": { "moby": true }
+  },
+  "remoteEnv": {
+    "UV_PROJECT_ENVIRONMENT": "/home/vscode/.venvs/${containerWorkspaceFolderBasename}"
+  },
+  "postCreateCommand": "make setup",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "charliermarsh.ruff",
+        "ms-python.python",
+        "timonwong.shellcheck",
+        "github.vscode-github-actions",
+        "hashicorp.terraform"
+      ]
+    }
+  }
+}
