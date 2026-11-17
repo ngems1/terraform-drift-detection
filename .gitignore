@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+override.tf
+*_override.tf
+# keep .terraform.lock.hcl for root modules: it pins provider checksums
+
+# Secrets: never commit these
+.env
+*.pem
+*.key
+terraform.tfvars
+!examples/**/*.tfvars
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local SVG / GIF frame checks
+.snapshots/
+
+# Plans generated from the examples (committed fixtures live in tests/fixtures/)
+tfplan
+examples/terraform/**/plan.json
+examples/terraform/**/infracost.json
+
+# Drift run outputs and local e2e state
+out/
+.e2e/
+backend.local.hcl
