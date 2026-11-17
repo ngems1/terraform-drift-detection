@@ -1,0 +1,9 @@
+# Checkov skips for the demo stack. This stack exists to be DRIFTED in a lab (it must also run
+# on the Moto emulator); the paved-road bucket with these controls is in project #8
+# (terraform-plan-policy-check, examples/terraform/modules/private-bucket).
+skip-check:
+  - CKV_AWS_145 # KMS default encryption: AES256 here (Moto lab); use a customer KMS key in prod
+  - CKV_AWS_18  # access logging: needs a separate log bucket; out of scope for a drift demo
+  - CKV_AWS_144 # cross-region replication: a DR decision per bucket (see the DR track, #42)
+  - CKV2_AWS_61 # lifecycle rules: covered by #8's private-bucket module
+  - CKV2_AWS_62 # event notifications: an integration, not a security control
