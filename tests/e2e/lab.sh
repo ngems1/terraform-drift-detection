@@ -12,6 +12,11 @@ repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 EP="${AWS_ENDPOINT:-http://localhost:5000}"
 export AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=eu-west-1
 export TF_IN_AUTOMATION=1 TF_VAR_environment=dev TF_VAR_aws_endpoint="$EP"
+# Keep .terraform/ (the ~700 MB AWS provider) off the repository: on a bind mount (Docker on
+# Windows/macOS) writing it there takes minutes per init. The cache shares one download.
+export TF_DATA_DIR="${TF_DATA_DIR:-${TMPDIR:-/tmp}/driftwatch-tfdata}"
+export TF_PLUGIN_CACHE_DIR="${TF_PLUGIN_CACHE_DIR:-${TMPDIR:-/tmp}/driftwatch-plugins}"
+mkdir -p "$TF_PLUGIN_CACHE_DIR"
 export DRIFTWATCH="uv run --project $repo driftwatch" DRIFT_CONFIG="${DRIFT_CONFIG:-$repo/tests/e2e/drift.toml}"
 export BACKEND_CONFIG="$repo/.lab/backend.hcl"
 stack="$repo/stacks/app-storage"
@@ -34,8 +39,8 @@ access_key = "test"
 secret_key = "test"
 endpoints = { s3 = "$EP" }
 EOF
-  # A .terraform/ from another machine (e.g. your host, with a plugin cache) can't be reused here.
-  rm -rf "$stack/.terraform"
+  # Fresh init each time: TF_DATA_DIR lives in /tmp (see above).
+  rm -rf "$TF_DATA_DIR"
   terraform -chdir="$stack" init -input=false -no-color -reconfigure -backend-config="$BACKEND_CONFIG" > /dev/null &&
     terraform -chdir="$stack" apply -input=false -no-color -auto-approve | tail -n 4
 }

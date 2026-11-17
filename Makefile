@@ -1,6 +1,6 @@
 # Every target mirrors a CI job: green here = green in CI.
 #   make all     lint + test + tf + security + docs     (no Docker needed)
-#   make e2e     the whole pipeline against Moto        (Docker, ~2 min)
+#   make e2e     the whole pipeline against Moto        (Docker, ~3-4 min)
 SHELL := /usr/bin/env bash
 .SHELLFLAGS := -euo pipefail -c
 UV ?= uv

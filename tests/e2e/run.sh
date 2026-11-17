@@ -19,6 +19,11 @@ state="${E2E_STATE:-$repo/.e2e}"
 rm -rf "$state" && mkdir -p "$state/sink" "$state/out"
 export AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=eu-west-1
 export TF_IN_AUTOMATION=1 TF_VAR_environment=dev TF_VAR_aws_endpoint="$EP"
+# Keep .terraform/ (the ~700 MB AWS provider) off the repository: on a bind mount (Docker on
+# Windows/macOS) writing it there takes minutes per init. The cache shares one download.
+export TF_DATA_DIR="${TF_DATA_DIR:-${TMPDIR:-/tmp}/driftwatch-tfdata}"
+export TF_PLUGIN_CACHE_DIR="${TF_PLUGIN_CACHE_DIR:-${TMPDIR:-/tmp}/driftwatch-plugins}"
+mkdir -p "$TF_PLUGIN_CACHE_DIR"
 export DRIFTWATCH="uv run --project $repo driftwatch" DRIFT_CONFIG="$here/drift.toml"
 stack="$repo/stacks/app-storage"
 aws_() { aws --endpoint-url "$EP" "$@"; }
@@ -58,7 +63,7 @@ detect() { (cd "$repo" && KEEP_PLAN_JSON="${1:-}" scripts/detect-drift.sh "$stac
 pass "ready"
 
 log "1/5 apply, then check: clean, nothing posted"
-rm -rf "$stack/.terraform"
+rm -rf "$TF_DATA_DIR"
 terraform -chdir="$stack" init -input=false -no-color -backend-config="$BACKEND_CONFIG" > /dev/null
 terraform -chdir="$stack" apply -input=false -no-color -auto-approve > /dev/null
 detect "$state/plan-clean.json"
@@ -102,7 +107,7 @@ pass "pending: aws_sqs_queue.jobs, no drift"
 
 log "5/5 the check itself breaks (wrong state bucket)"
 sed 's/tfstate-e2e/does-not-exist/' "$BACKEND_CONFIG" > "$state/broken.hcl"
-rm -rf "$stack/.terraform"
+rm -rf "$TF_DATA_DIR"
 BACKEND_CONFIG="$state/broken.hcl" detect
 [ "$(field "$r" 'd["status"]')" = error ] || fail "expected an error report"
 rm -f "$state"/sink/*.json
@@ -110,6 +115,6 @@ set +e; notify > /dev/null; code=$?; set -e
 [ "$code" = 1 ] || fail "an error report must make notify exit 1 (default --fail-on error)"
 grep -q 'drift check FAILED' "$state"/sink/*-slack.json || fail "error headline"
 pass "error report posted and the job fails"
-rm -rf "$stack/.terraform"
+rm -rf "$TF_DATA_DIR"
 
 log "e2e PASSED"

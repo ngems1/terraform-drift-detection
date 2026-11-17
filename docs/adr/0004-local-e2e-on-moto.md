@@ -40,7 +40,7 @@ record a real provider's perpetual diff.
 
 ## Consequences
 
-- **Good:** the pipeline runs end to end in about two minutes, offline except for image and
+- **Good:** the pipeline runs end to end in about 3-4 minutes, offline except for image and
   provider downloads, on a laptop and in CI (Moto as a service container).
 - **Good:** the quirks became a teaching example for `drift.toml`.
 - **Bad:** behaviour that only real AWS has (eventual consistency, IAM evaluation, real

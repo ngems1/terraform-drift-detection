@@ -98,7 +98,7 @@ field is what lets a reviewer judge whether the blind spot is still acceptable.
 
 ```bash
 sed -i 's/tfstate-lab/tfstate-gone/' .lab/backend.hcl
-rm -rf stacks/app-storage/.terraform
+rm -rf "$TF_DATA_DIR"            # force a fresh terraform init
 scripts/detect-drift.sh stacks/app-storage app-storage/dev .lab/out
 uv run driftwatch notify .lab/out/app-storage-dev.json --slack-webhook-env SLACK_URL --dry-run; echo "exit=$?"
 ```
