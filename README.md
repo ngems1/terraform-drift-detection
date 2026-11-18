@@ -255,5 +255,3 @@ Part of the [Code Clinic course](https://github.com/ngems1/code-clinic).
 ## License
 
 [MIT](LICENSE) © ngems1
-#   t e r r a f o r m - d r i f t - d e t e c t i o n  
- 
